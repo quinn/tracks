@@ -12,3 +12,4 @@ db/schema.rb
 .dotest
 public/javascripts/cache
 public/stylesheets/cache
+*~

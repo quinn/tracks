@@ -15,6 +15,21 @@
     <%= stylesheet_link_tag *%w[ standard calendar-system niftyCorners] %>
   <% end %>
   <%= javascript_include_tag :unobtrusive %>
+  
+  <%= javascript_include_tag 'jquery-1.2.6.js' %>
+  <script src='http://localhost:8001/static/Orbited.js'>    </script>
+  <script type='text/javascript'>
+    //<![CDATA[
+      document.domain = document.domain
+      Orbited.settings.port = <%= OrbitedPort %>;
+      Orbited.settings.hostname = document.domain;
+      TCPSocket = Orbited.TCPSocket;
+    //]]>
+  </script>
+  <script src='http://localhost:8001/static/protocols/stomp/stomp.js'>    </script>
+
+  <%= javascript_include_tag 'notifier.jquery.js' %>
+  
   <%= stylesheet_link_tag "print", :media => "print" %>
   
   <link rel="shortcut icon" href="<%= url_for(:controller => 'favicon.ico') %>" />
