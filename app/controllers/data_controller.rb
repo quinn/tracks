@@ -19,8 +19,8 @@ class DataController < ApplicationController
     all_tables = {}
     
     all_tables['todos'] = current_user.todos.find(:all)
-    all_tables['contexts'] = current_user.contexts.find(:all)
-    all_tables['projects'] = current_user.projects.find(:all)
+    all_tables['contexts'] = Context.all_of_them.find(:all)
+    all_tables['projects'] = Project.all_of_them.find(:all)
     all_tables['tags'] = current_user.tags.find(:all)
     all_tables['taggings'] = current_user.taggings.find(:all)
     all_tables['notes'] = current_user.notes.find(:all)
@@ -78,8 +78,8 @@ class DataController < ApplicationController
   def xml_export
     result = ""
     result << current_user.todos.find(:all).to_xml
-    result << current_user.contexts.find(:all).to_xml(:skip_instruct => true)
-    result << current_user.projects.find(:all).to_xml(:skip_instruct => true)
+    result << Context.all_of_them.find(:all).to_xml(:skip_instruct => true)
+    result << Project.all_of_them.find(:all).to_xml(:skip_instruct => true)
     result << current_user.tags.find(:all).to_xml(:skip_instruct => true)
     result << current_user.taggings.find(:all).to_xml(:skip_instruct => true)
     result << current_user.notes.find(:all).to_xml(:skip_instruct => true)
@@ -108,7 +108,7 @@ class DataController < ApplicationController
     # contexts
     translate_context = Hash.new
     translate_context[nil] = nil
-    current_user.contexts.each { |context| context.destroy }
+    Context.all_of_them.each { |context| context.destroy }
     @inarray['contexts'].each { | item |
       newitem = Context.new(item.ivars['attributes'])
       newitem.user_id = current_user.id
@@ -120,7 +120,7 @@ class DataController < ApplicationController
     # projects
     translate_project = Hash.new
     translate_project[nil] = nil
-    current_user.projects.each { |item| item.destroy }
+    Project.all_of_them.each { |item| item.destroy }
     @inarray['projects'].each { |item|
       newitem = Project.new(item.ivars['attributes'])
       # ids

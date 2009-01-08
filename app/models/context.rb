@@ -5,7 +5,12 @@ class Context < ActiveRecord::Base
 
   named_scope :active, :conditions => { :hide => false }
   named_scope :hidden, :conditions => { :hide => true }
-
+  named_scope :all_of_them, :order => 'position ASC' do
+             def find_by_params(params)
+               find(params['id'] || params['context_id']) || nil
+             end
+           end
+  
   acts_as_list :scope => :user
   extend NamePartFinder
   include Tracks::TodoList

@@ -8,16 +8,16 @@ class FeedlistController < ApplicationController
     unless mobile?
       init_data_for_sidebar 
     else
-      @projects = current_user.projects
-      @contexts = current_user.contexts
+      @projects = Project.all_of_them
+      @contexts = Context.all_of_them
     end
     
-    @active_projects = current_user.projects.active
-    @hidden_projects = current_user.projects.hidden
-    @completed_projects = current_user.projects.completed
+    @active_projects = Project.all_of_them.active
+    @hidden_projects = Project.all_of_them.hidden
+    @completed_projects = Project.all_of_them.completed
     
-    @active_contexts = current_user.contexts.active
-    @hidden_contexts = current_user.contexts.hidden
+    @active_contexts = Context.all_of_them.active
+    @hidden_contexts = Context.all_of_them.hidden
     
     respond_to do |format|
       format.html { render :layout => 'standard' }
@@ -26,12 +26,12 @@ class FeedlistController < ApplicationController
   end
   
   def get_feeds_for_context
-    context = current_user.contexts.find params[:context_id]
+    context = Context.all_of_them.find params[:context_id]
     render :partial => 'feed_for_context', :locals => { :context => context }
   end
 
   def get_feeds_for_project
-    project = current_user.projects.find params[:project_id]
+    project = Project.all_of_them.find params[:project_id]
     render :partial => 'feed_for_project', :locals => { :project => project }
   end
 

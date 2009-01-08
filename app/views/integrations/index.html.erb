@@ -1,4 +1,4 @@
-<% has_contexts = !current_user.contexts.empty? -%>
+<% has_contexts = !Context.all_of_them.empty? -%>
 <h1>Integrations</h1>
 <p>Tracks can be integrated with a number of other tools... whatever it takes to help you get things done! This page has information on setting up some of these. Not all of these are applicable to all platforms, and some require more technical knowledge than others. See also <%= link_to "developer documentation for Tracks' REST API", url_for(:action => 'rest_api') %>.</p>
 <p>Contents:
@@ -30,7 +30,7 @@ You can also use the Rich Todo API to send in tasks like "do laundry @ Home" or 
 
 <% if has_contexts -%>
 <ol>
-  <li>Choose the context you want to add actions to: <select name="applescript1-contexts" id="applescript1-contexts"><%= options_from_collection_for_select(current_user.contexts, "id", "name", current_user.contexts.first.id) %></select>
+  <li>Choose the context you want to add actions to: <select name="applescript1-contexts" id="applescript1-contexts"><%= options_from_collection_for_select(Context.all_of_them, "id", "name", Context.all_of_them.first.id) %></select>
 		<%= observe_field "applescript1-contexts", :update => "applescript1",
 		:with => 'context_id',
 		:url => { :controller => "integrations", :action => "get_applescript1" },
@@ -40,7 +40,7 @@ You can also use the Rich Todo API to send in tasks like "do laundry @ Home" or 
 	</li>
 	<li>Copy the Applescript below to the clipboard.<br />
 	
-	<textarea id="applescript1" name="applescript1" rows="15"><%= render :partial => 'applescript1', :locals => { :context => current_user.contexts.first } %></textarea>
+	<textarea id="applescript1" name="applescript1" rows="15"><%= render :partial => 'applescript1', :locals => { :context => Context.all_of_them.first } %></textarea>
 	</li>
  	<li>Open Script Editor and paste the script into a new document.</li>
  	<li>Compile and save the script. Run it as necessary.</li>
@@ -55,7 +55,7 @@ You can also use the Rich Todo API to send in tasks like "do laundry @ Home" or 
 
 <% if has_contexts -%>
 <ol>
-	<li>Choose the context you want to add actions to: <select name="applescript2-contexts" id="applescript2-contexts"><%= options_from_collection_for_select(current_user.contexts, "id", "name", current_user.contexts.first.id) %></select>
+	<li>Choose the context you want to add actions to: <select name="applescript2-contexts" id="applescript2-contexts"><%= options_from_collection_for_select(Context.all_of_them, "id", "name", Context.all_of_them.first.id) %></select>
 		<%= observe_field "applescript2-contexts", :update => "applescript2",
 		:with => 'context_id',
 		:url => { :controller => "integrations", :action => "get_applescript2" },
@@ -65,7 +65,7 @@ You can also use the Rich Todo API to send in tasks like "do laundry @ Home" or 
 	</li>
 	<li>Copy the Applescript below to the clipboard.<br />
 	
-	<textarea id="applescript2" name="applescript2" rows="15"><%= render :partial => 'applescript2', :locals => { :context => current_user.contexts.first } %></textarea>
+	<textarea id="applescript2" name="applescript2" rows="15"><%= render :partial => 'applescript2', :locals => { :context => Context.all_of_them.first } %></textarea>
 	</li>
  	<li>Open Script Editor and paste the script into a new document.</li>
  	<li>Compile and save the script to the ~/Library/Scriipts/Mail Scripts directory.</li>
@@ -82,7 +82,7 @@ You can also use the Rich Todo API to send in tasks like "do laundry @ Home" or 
 
 <% if has_contexts -%>
 <ol>
-	<li>Choose the context you want to add actions to: <select name="quicksilver-contexts" id="quicksilver-contexts"><%= options_from_collection_for_select(current_user.contexts, "id", "name", current_user.contexts.first.id) %></select>
+	<li>Choose the context you want to add actions to: <select name="quicksilver-contexts" id="quicksilver-contexts"><%= options_from_collection_for_select(Context.all_of_them, "id", "name", Context.all_of_them.first.id) %></select>
 		<%= observe_field "quicksilver-contexts", :update => "quicksilver",
 		:with => 'context_id',
 		:url => { :controller => "integrations", :action => "get_quicksilver_applescript" },
@@ -92,7 +92,7 @@ You can also use the Rich Todo API to send in tasks like "do laundry @ Home" or 
 </li>
 <li>Copy the Applescript below to the clipboard.<br />
 	
-<textarea id="quicksilver" name="quicksilver" rows="15"><%= render :partial => 'quicksilver_applescript', :locals => { :context => current_user.contexts.first } %></textarea>
+<textarea id="quicksilver" name="quicksilver" rows="15"><%= render :partial => 'quicksilver_applescript', :locals => { :context => Context.all_of_them.first } %></textarea>
 </li>
 	<li>Open Script Editor and paste the script into a new document.</li>
  <li>Compile and save the script as "Add to Tracks.scpt" in ~/Library/Application Support/Quicksilver/Actions/ (you may need to create the Actions directory)</li>

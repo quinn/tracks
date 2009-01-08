@@ -575,7 +575,7 @@ This is alright for some web applications, but certainly not if the user is not 
 
 [source, ruby]
 ----------------------------------------------------------------------------
-@project = @current_user.projects.find(params[:id])
+@project = @Project.all_of_them.find(params[:id])
 ----------------------------------------------------------------------------
 
 Depending on your web application, there will be many more parameters the user can tamper with. As a rule of thumb, [,#fffcdb]#no user input data is secure, until proven otherwise, and every parameter from the user is potentially manipulated#.

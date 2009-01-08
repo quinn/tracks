@@ -10,7 +10,7 @@ class ContextsController < ApplicationController
   session :off, :only => :index, :if => Proc.new { |req| ['rss','atom','txt'].include?(req.parameters[:format]) }
 
   def index
-    @contexts = current_user.contexts(true) #true is passed here to force an immediate load so that size and empty? checks later don't result in separate SQL queries
+    @contexts = Context.all_of_them # sry AR is a POS
     init_not_done_counts(['context'])
     respond_to do |format|
       format.html &render_contexts_html
@@ -23,7 +23,7 @@ class ContextsController < ApplicationController
   end
   
   def show
-    @contexts = current_user.contexts(true)
+    @contexts = Context.all_of_them(true)
     if (@context.nil?)
       respond_to do |format|
         format.html { render :text => 'Context not found', :status => 404 }
@@ -50,7 +50,7 @@ class ContextsController < ApplicationController
       render_failure "Expected post format is valid xml like so: <request><context><name>context name</name></context></request>.", 400
       return
     end
-    @context = current_user.contexts.build
+    @context = Context.all_of_them.build
     params_are_invalid = true
     if (params['context'] || (params['request'] && params['request']['context']))
       @context.attributes = params['context'] || params['request']['context']
@@ -60,7 +60,7 @@ class ContextsController < ApplicationController
     @context_not_done_counts = { @context.id => 0 }
     respond_to do |format|
       format.js do
-        @down_count = current_user.contexts.size
+        @down_count = Context.all_of_them.size
       end
       format.xml do
         if @context.new_record? && params_are_invalid
@@ -89,7 +89,7 @@ class ContextsController < ApplicationController
           format.js
         end
       elsif boolean_param('update_context_name')
-        @contexts = current_user.projects
+        @contexts = Project.all_of_them
         render :template => 'contexts/update_context_name.js.rjs'
         return
       else
@@ -107,7 +107,7 @@ class ContextsController < ApplicationController
   def destroy
     @context.destroy
     respond_to do |format|
-      format.js { @down_count = current_user.contexts.size }
+      format.js { @down_count = Context.all_of_them.size }
       format.xml { render :text => "Deleted context #{@context.name}" }
     end
   end
@@ -116,7 +116,7 @@ class ContextsController < ApplicationController
   # 
   def order
     params["list-contexts"].each_with_index do |id, position|
-      current_user.contexts.update(id, :position => position + 1)
+      Context.all_of_them.update(id, :position => position + 1)
     end
     render :nothing => true
   end
@@ -174,7 +174,7 @@ class ContextsController < ApplicationController
   end
 
   def set_context_from_params
-    @context = current_user.contexts.find_by_params(params)
+    @context = Context.all_of_them.find_by_params(params)
   rescue
     @context = nil
   end
@@ -203,7 +203,7 @@ class ContextsController < ApplicationController
         :order => "todos.due IS NULL, todos.due ASC, todos.created_at ASC", 
         :include => [:project, :tags])
 
-      @projects = current_user.projects
+      @projects = Project.all_of_them
 
       @count = @not_done_todos.size
       @default_project_context_name_map = build_default_project_context_name_map(@projects).to_json

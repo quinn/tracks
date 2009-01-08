@@ -46,9 +46,9 @@ class RecurringTodosController < ApplicationController
       if params['project_name'] == 'None'
         project = Project.null_object
       else
-        project = current_user.projects.find_by_name(params['project_name'].strip)
+        project = Project.all_of_them.find_by_name(params['project_name'].strip)
         unless project
-          project = current_user.projects.build
+          project = Project.all_of_them.build
           project.name = params['project_name'].strip
           project.save
           @new_project_created = true
@@ -59,9 +59,9 @@ class RecurringTodosController < ApplicationController
     
     # update context
     if params['recurring_todo']['context_id'].blank? && !params['context_name'].blank?
-      context = current_user.contexts.find_by_name(params['context_name'].strip)
+      context = Context.all_of_them.find_by_name(params['context_name'].strip)
       unless context
-        context = current_user.contexts.build
+        context = Context.all_of_them.build
         context.name = params['context_name'].strip
         context.save
         @new_context_created = true
@@ -93,13 +93,13 @@ class RecurringTodosController < ApplicationController
     @recurring_todo.update_attributes(p.attributes)
 
     if p.project_specified_by_name?
-      project = current_user.projects.find_or_create_by_name(p.project_name)
+      project = Project.all_of_them.find_or_create_by_name(p.project_name)
       @new_project_created = project.new_record_before_save?
       @recurring_todo.project_id = project.id
     end
     
     if p.context_specified_by_name?
-      context = current_user.contexts.find_or_create_by_name(p.context_name)
+      context = Context.all_of_them.find_or_create_by_name(p.context_name)
       @new_context_created = context.new_record_before_save?
       @recurring_todo.context_id = context.id
     end
@@ -250,8 +250,8 @@ class RecurringTodosController < ApplicationController
       ['January',1], ['Februari',2], ['March', 3], ['April',4], ['May',5], ['June',6], 
       ['July',7], ['August',8], ['September',9], ['October', 10], ['November', 11], ['December',12]]
     @xth_day = [['first',1],['second',2],['third',3],['fourth',4],['last',5]]    
-    @projects = current_user.projects.find(:all, :include => [:default_context])
-    @contexts = current_user.contexts.find(:all)
+    @projects = Project.all_of_them.find(:all, :include => [:default_context])
+    @contexts = Context.all_of_them.find(:all)
     @default_project_context_name_map = build_default_project_context_name_map(@projects).to_json
   end
   

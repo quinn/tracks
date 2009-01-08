@@ -11,10 +11,10 @@ class TodosController < ApplicationController
 
   def index
     current_user.deferred_todos.find_and_activate_ready
-    @projects = current_user.projects.find(:all, :include => [:default_context])
-    @contexts = current_user.contexts.find(:all)
+    @projects = Project.all_of_them.find(:all, :include => [:default_context])
+    @contexts = Context.all_of_them.find(:all)
 
-    @contexts_to_show = current_user.contexts.active
+    @contexts_to_show = Context.all_of_them.active
     
     respond_to do |format|
       format.html  &render_todos_html
@@ -28,14 +28,14 @@ class TodosController < ApplicationController
   end
   
   def new
-    @projects = current_user.projects.active
-    @contexts = current_user.contexts.find(:all)
+    @projects = Project.all_of_them.active
+    @contexts = Context.all_of_them.find(:all)
     respond_to do |format|
       format.m {
         @new_mobile = true
         @return_path=cookies[:mobile_url]
-        @mobile_from_context = current_user.contexts.find_by_id(params[:from_context]) if params[:from_context]
-        @mobile_from_project = current_user.projects.find_by_id(params[:from_project]) if params[:from_project]
+        @mobile_from_context = Context.all_of_them.find_by_id(params[:from_context]) if params[:from_context]
+        @mobile_from_project = Project.all_of_them.find_by_id(params[:from_project]) if params[:from_project]
         if params[:from_project] && !params[:from_context]
           # we have a project but not a context -> use the default context
           @mobile_from_context = @mobile_from_project.default_context
@@ -53,13 +53,13 @@ class TodosController < ApplicationController
     @todo = current_user.todos.build(p.attributes)
     
     if p.project_specified_by_name?
-      project = current_user.projects.find_or_create_by_name(p.project_name)
+      project = Project.all_of_them.find_or_create_by_name(p.project_name)
       @new_project_created = project.new_record_before_save?
       @todo.project_id = project.id
     end
     
     if p.context_specified_by_name?
-      context = current_user.contexts.find_or_create_by_name(p.context_name)
+      context = Context.all_of_them.find_or_create_by_name(p.context_name)
       @new_context_created = context.new_record_before_save?
       @not_done_todos = [@todo] if @new_context_created
       @todo.context_id = context.id
@@ -80,15 +80,15 @@ class TodosController < ApplicationController
         if @saved
           redirect_to @return_path
         else
-          @projects = current_user.projects.find(:all)
-          @contexts = current_user.contexts.find(:all)
+          @projects = Project.all_of_them.find(:all)
+          @contexts = Context.all_of_them.find(:all)
           render :action => "new"
         end
       end
       format.js do
         determine_down_count if @saved
-        @contexts = current_user.contexts.find(:all) if @new_context_created
-        @projects = current_user.projects.find(:all) if @new_project_created
+        @contexts = Context.all_of_them.find(:all) if @new_context_created
+        @projects = Project.all_of_them.find(:all) if @new_project_created
         @initial_context_name = params['default_context_name']
         @initial_project_name = params['default_project_name']
         render :action => 'create'
@@ -104,8 +104,8 @@ class TodosController < ApplicationController
   end
   
   def edit
-    @projects = current_user.projects.find(:all)
-    @contexts = current_user.contexts.find(:all)
+    @projects = Project.all_of_them.find(:all)
+    @contexts = Context.all_of_them.find(:all)
     @source_view = params['_source_view'] || 'todo'
     @tag_name = params['_tag_name']
     respond_to do |format|
@@ -116,8 +116,8 @@ class TodosController < ApplicationController
   def show
     respond_to do |format|
       format.m do
-        @projects = current_user.projects.active
-        @contexts = current_user.contexts.find(:all)
+        @projects = Project.all_of_them.active
+        @contexts = Context.all_of_them.find(:all)
         @edit_mobile = true
         @return_path=cookies[:mobile_url]
         render :action => 'show'
@@ -189,9 +189,9 @@ class TodosController < ApplicationController
       if params['project_name'] == 'None'
         project = Project.null_object
       else
-        project = current_user.projects.find_by_name(params['project_name'].strip)
+        project = Project.all_of_them.find_by_name(params['project_name'].strip)
         unless project
-          project = current_user.projects.build
+          project = Project.all_of_them.build
           project.name = params['project_name'].strip
           project.save
           @new_project_created = true
@@ -201,9 +201,9 @@ class TodosController < ApplicationController
     end
     
     if params['todo']['context_id'].blank? && !params['context_name'].blank?
-      context = current_user.contexts.find_by_name(params['context_name'].strip)
+      context = Context.all_of_them.find_by_name(params['context_name'].strip)
       unless context
-        context = current_user.contexts.build
+        context = Context.all_of_them.build
         context.name = params['context_name'].strip
         context.save
         @new_context_created = true
@@ -255,7 +255,7 @@ class TodosController < ApplicationController
     end
     
     @project_changed = @original_item_project_id != @todo.project_id
-    if (@project_changed && !@original_item_project_id.nil?) then @remaining_undone_in_project = current_user.projects.find(@original_item_project_id).not_done_todo_count; end
+    if (@project_changed && !@original_item_project_id.nil?) then @remaining_undone_in_project = Project.all_of_them.find(@original_item_project_id).not_done_todo_count; end
     determine_down_count
     respond_to do |format|
       format.js
@@ -336,8 +336,8 @@ class TodosController < ApplicationController
     @source_view = 'deferred'
     @page_title = "TRACKS::Tickler"
     
-    @projects = current_user.projects.find(:all, :include => [ :todos, :default_context ])
-    @contexts_to_show = @contexts = current_user.contexts.find(:all, :include => [ :todos ])
+    @projects = Project.all_of_them.find(:all, :include => [ :todos, :default_context ])
+    @contexts_to_show = @contexts = Context.all_of_them.find(:all, :include => [ :todos ])
     
     current_user.deferred_todos.find_and_activate_ready
     @not_done_todos = current_user.deferred_todos
@@ -362,12 +362,12 @@ class TodosController < ApplicationController
   end
   
   def filter_to_context
-    context = current_user.contexts.find(params['context']['id'])
+    context = Context.all_of_them.find(params['context']['id'])
     redirect_to formatted_context_todos_path(context, :m)
   end
   
   def filter_to_project
-    project = current_user.projects.find(params['project']['id'])
+    project = Project.all_of_them.find(params['project']['id'])
     redirect_to formatted_project_todos_path(project, :m)
   end
   
@@ -403,8 +403,8 @@ class TodosController < ApplicationController
       :conditions => ['todos.user_id = ? and state = ?', current_user.id, 'completed'],
       :order => 'todos.completed_at DESC')
 
-    @projects = current_user.projects
-    @contexts = current_user.contexts
+    @projects = Project.all_of_them
+    @contexts = Context.all_of_them
     @contexts_to_show = @contexts.reject {|x| x.hide? }
     
     # Set count badge to number of items with this tag
@@ -542,13 +542,13 @@ class TodosController < ApplicationController
   def with_parent_resource_scope(&block)
     @feed_title = "Actions "
     if (params[:context_id])
-      @context = current_user.contexts.find_by_params(params)
+      @context = Context.all_of_them.find_by_params(params)
       @feed_title = @feed_title + "in context '#{@context.name}'"
       Todo.send :with_scope, :find => {:conditions => ['todos.context_id = ?', @context.id]} do
         yield
       end
     elsif (params[:project_id])
-      @project = current_user.projects.find_by_params(params)
+      @project = Project.all_of_them.find_by_params(params)
       @feed_title = @feed_title + "in project '#{@project.name}'"
       @project_feed = true
       Todo.send :with_scope, :find => {:conditions => ['todos.project_id = ?', @project.id]} do
@@ -629,12 +629,12 @@ class TodosController < ApplicationController
         # false])
       end
       from.context do
-        @down_count = current_user.contexts.find(@todo.context_id).not_done_todo_count
+        @down_count = Context.all_of_them.find(@todo.context_id).not_done_todo_count
       end
       from.project do
         unless @todo.project_id == nil
-          @down_count = current_user.projects.find(@todo.project_id).not_done_todo_count(:include_project_hidden_todos => true)
-          @deferred_count = current_user.projects.find(@todo.project_id).deferred_todo_count
+          @down_count = Project.all_of_them.find(@todo.project_id).not_done_todo_count(:include_project_hidden_todos => true)
+          @deferred_count = Project.all_of_them.find(@todo.project_id).deferred_todo_count
         end
       end
       from.deferred do
@@ -655,16 +655,16 @@ class TodosController < ApplicationController
     
   def determine_remaining_in_context_count(context_id = @todo.context_id)
     source_view do |from|
-      from.deferred { @remaining_in_context = current_user.contexts.find(context_id).deferred_todo_count }
+      from.deferred { @remaining_in_context = Context.all_of_them.find(context_id).deferred_todo_count }
       from.tag      { 
         tag = Tag.find_by_name(params['_tag_name'])
         if tag.nil?
           tag = Tag.new(:name => params['tag'])
         end
-        @remaining_in_context = current_user.contexts.find(context_id).not_done_todo_count({:tag => tag.id})
+        @remaining_in_context = Context.all_of_them.find(context_id).not_done_todo_count({:tag => tag.id})
       }
     end
-    @remaining_in_context = current_user.contexts.find(context_id).not_done_todo_count if @remaining_in_context.nil?
+    @remaining_in_context = Context.all_of_them.find(context_id).not_done_todo_count if @remaining_in_context.nil?
   end 
     
   def determine_completed_count
@@ -673,11 +673,11 @@ class TodosController < ApplicationController
         @completed_count = Todo.count_by_sql(['SELECT COUNT(*) FROM todos, contexts WHERE todos.context_id = contexts.id and todos.user_id = ? and todos.state = ? and contexts.hide = ?', current_user.id, 'completed', false])
       end
       from.context do
-        @completed_count = current_user.contexts.find(@todo.context_id).done_todo_count
+        @completed_count = Context.all_of_them.find(@todo.context_id).done_todo_count
       end
       from.project do
         unless @todo.project_id == nil
-          @completed_count = current_user.projects.find(@todo.project_id).done_todo_count
+          @completed_count = Project.all_of_them.find(@todo.project_id).done_todo_count
         end
       end
     end

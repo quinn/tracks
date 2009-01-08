@@ -9,11 +9,11 @@ class ProjectsController < ApplicationController
   session :off, :only => :index, :if => Proc.new { |req| ['rss','atom','txt'].include?(req.parameters[:format]) }
 
   def index
-    @projects = current_user.projects(true)
+    @projects = Project.all_of_them
     if params[:projects_and_actions]
       projects_and_actions
     else      
-      @contexts = current_user.contexts(true)
+      @contexts = Context.all_of_them(true)
       init_not_done_counts(['project'])
       if params[:only_active_with_no_next_actions]
         @projects = @projects.select { |p| p.active? && count_undone_todos(p) == 0 }
@@ -40,9 +40,9 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    @contexts = current_user.contexts(true)
+    @contexts = Context.all_of_them(true)
     init_data_for_sidebar unless mobile?
-    @projects = current_user.projects
+    @projects = Project.all_of_them
     @page_title = "TRACKS::Project: #{@project.name}"
     @project.todos.send :with_scope, :find => { :include => [:context] } do
       @not_done = @project.not_done_todos(:include_project_hidden_todos => true)
@@ -54,8 +54,8 @@ class ProjectsController < ApplicationController
     
     @count = @not_done.size
     @down_count = @count + @deferred.size 
-    @next_project = current_user.projects.next_from(@project)
-    @previous_project = current_user.projects.previous_from(@project)
+    @next_project = Project.all_of_them.next_from(@project)
+    @previous_project = Project.all_of_them.previous_from(@project)
     @default_project_context_name_map = build_default_project_context_name_map(@projects).to_json
     respond_to do |format|
       format.html
@@ -75,7 +75,7 @@ class ProjectsController < ApplicationController
       render_failure "Expected post format is valid xml like so: <request><project><name>project name</name></project></request>."
       return
     end
-    @project = current_user.projects.build
+    @project = Project.all_of_them.build
     params_are_invalid = true
     if (params['project'] || (params['request'] && params['request']['project']))
       @project.attributes = params['project'] || params['request']['project']
@@ -84,10 +84,10 @@ class ProjectsController < ApplicationController
     @go_to_project = params['go_to_project']
     @saved = @project.save
     @project_not_done_counts = { @project.id => 0 }
-    @active_projects_count = current_user.projects.active.count
-    @contexts = current_user.contexts
+    @active_projects_count = Project.all_of_them.active.count
+    @contexts = Context.all_of_them
     respond_to do |format|
-      format.js { @down_count = current_user.projects.size }
+      format.js { @down_count = Project.all_of_them.size }
       format.xml do
         if @project.new_record? && params_are_invalid
           render_failure "Expected post format is valid xml like so: <request><project><name>project name</name></project></request>."
@@ -124,10 +124,10 @@ class ProjectsController < ApplicationController
           @project_not_done_counts = Hash.new
           @project_not_done_counts[@project.id] = @project.reload().not_done_todo_count(:include_project_hidden_todos => true)
         end
-        @contexts = current_user.contexts
-        @active_projects_count = current_user.projects.active.count
-        @hidden_projects_count = current_user.projects.hidden.count
-        @completed_projects_count = current_user.projects.completed.count
+        @contexts = Context.all_of_them
+        @active_projects_count = Project.all_of_them.active.count
+        @hidden_projects_count = Project.all_of_them.hidden.count
+        @completed_projects_count = Project.all_of_them.completed.count
         render :template => 'projects/update.js.rjs'
         return
       elsif boolean_param('update_status')
@@ -138,7 +138,7 @@ class ProjectsController < ApplicationController
         render :template => 'projects/update_default_context.js.rjs'
         return
       elsif boolean_param('update_project_name')
-        @projects = current_user.projects
+        @projects = Project.all_of_them
         render :template => 'projects/update_project_name.js.rjs'
         return
       else
@@ -154,7 +154,7 @@ class ProjectsController < ApplicationController
   end
   
   def edit
-    @contexts = current_user.contexts
+    @contexts = Context.all_of_them
     respond_to do |format|
       format.js
     end
@@ -162,18 +162,18 @@ class ProjectsController < ApplicationController
   
   def destroy
     @project.destroy
-    @active_projects_count = current_user.projects.active.count
-    @hidden_projects_count = current_user.projects.hidden.count
-    @completed_projects_count = current_user.projects.completed.count
+    @active_projects_count = Project.all_of_them.active.count
+    @hidden_projects_count = Project.all_of_them.hidden.count
+    @completed_projects_count = Project.all_of_them.completed.count
     respond_to do |format|
-      format.js { @down_count = current_user.projects.size }
+      format.js { @down_count = Project.all_of_them.size }
       format.xml { render :text => "Deleted project #{@project.name}" }
     end
   end
   
   def order
     project_ids = params["list-active-projects"] || params["list-hidden-projects"] || params["list-completed-projects"]    
-    projects = current_user.projects.update_positions( project_ids )
+    projects = Project.all_of_them.update_positions( project_ids )
     render :nothing => true
   rescue
     notify :error, $!
@@ -182,15 +182,15 @@ class ProjectsController < ApplicationController
   
   def alphabetize
     @state = params['state']
-    @projects = current_user.projects.alphabetize(:state => @state) if @state
-    @contexts = current_user.contexts
+    @projects = Project.all_of_them.alphabetize(:state => @state) if @state
+    @contexts = Context.all_of_them
     init_not_done_counts(['project'])
   end
   
   def actionize
     @state = params['state']
-    @projects = current_user.projects.actionize(current_user.id, :state => @state) if @state
-    @contexts = current_user.contexts
+    @projects = Project.all_of_them.actionize(current_user.id, :state => @state) if @state
+    @contexts = Context.all_of_them
     init_not_done_counts(['project'])
   end
   
@@ -199,13 +199,13 @@ class ProjectsController < ApplicationController
   def render_projects_html
     lambda do
       @page_title = "TRACKS::List Projects"
-      @count = current_user.projects.size 
+      @count = Project.all_of_them.size 
       @active_projects = @projects.active
       @hidden_projects = @projects.hidden
       @completed_projects = @projects.completed
       @no_projects = @projects.empty?
       @projects.cache_note_counts
-      @new_project = current_user.projects.build
+      @new_project = Project.all_of_them.build
       render
     end
   end
@@ -263,7 +263,7 @@ class ProjectsController < ApplicationController
   end
         
   def set_project_from_params
-    @project = current_user.projects.find_by_params(params)
+    @project = Project.all_of_them.find_by_params(params)
   end
     
   def set_source_view
