@@ -13,3 +13,4 @@ db/schema.rb
 public/javascripts/cache
 public/stylesheets/cache
 *~
+Capfile
